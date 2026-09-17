@@ -115,6 +115,21 @@
     font-weight:600;
   }
   .cover-top h1{ font-size:26px; margin-top:4px; }
+  .theme-toggle{
+    display:inline-flex; align-items:center; gap:7px;
+    padding:8px 12px;
+    border:1px solid var(--line-strong);
+    border-radius:999px;
+    background:var(--surface-2);
+    color:var(--ink-soft);
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11.5px;
+    letter-spacing:.04em;
+    cursor:pointer;
+    flex:none;
+  }
+  .theme-toggle:hover{ color:var(--ink); border-color:var(--accent); }
+  .theme-toggle .icon{ font-size:13px; line-height:1; }
   .cover-meta{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
@@ -155,7 +170,24 @@
     overflow:hidden;
   }
   .gantt-card h2{ font-size:18px; padding:18px 22px 0; }
-  .gantt-sub{ padding:2px 22px 14px; color:var(--ink-soft); font-size:13px; }
+  .gantt-sub{
+    padding:2px 22px 14px; color:var(--ink-soft); font-size:13px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  }
+  .jump-today{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:6px 12px;
+    border:1px solid var(--accent);
+    border-radius:999px;
+    background:transparent;
+    color:var(--accent);
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    letter-spacing:.04em;
+    cursor:pointer;
+    flex:none;
+  }
+  .jump-today:hover{ background:var(--accent); color:var(--accent-ink); }
   .gantt{
     overflow-x:auto;
     overflow-y:hidden;
@@ -188,6 +220,28 @@
   }
   .row:nth-child(even) .name{ background:var(--surface-2); }
   .row:nth-child(even) .track{ background:var(--surface-2); }
+  .row:not(.head1):not(.head2){ cursor:pointer; }
+  .row:not(.head1):not(.head2):hover .name,
+  .row:not(.head1):not(.head2):hover .track,
+  .row.pinned .name,
+  .row.pinned .track{
+    background:hsl(var(--hue) 80% 92%);
+  }
+  :root[data-theme="dark"] .row:not(.head1):not(.head2):hover .name,
+  :root[data-theme="dark"] .row:not(.head1):not(.head2):hover .track,
+  :root[data-theme="dark"] .row.pinned .name,
+  :root[data-theme="dark"] .row.pinned .track{
+    background:hsl(var(--hue) 40% 22%);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .row:not(.head1):not(.head2):hover .name,
+    :root:not([data-theme="light"]) .row:not(.head1):not(.head2):hover .track,
+    :root:not([data-theme="light"]) .row.pinned .name,
+    :root:not([data-theme="light"]) .row.pinned .track{
+      background:hsl(var(--hue) 40% 22%);
+    }
+  }
+  .row.pinned .name{ box-shadow:inset 3px 0 0 hsl(var(--hue) 60% 45%); }
   .dot{ width:9px; height:9px; border-radius:50%; flex:none; box-shadow:0 0 0 2px var(--surface) inset;}
   .aname{ color:var(--ink); font-weight:500; }
   .aname small{ display:block; color:var(--ink-faint); font-weight:400; font-size:11px; margin-top:1px; }
@@ -321,6 +375,9 @@
         <div class="cover-eyebrow">Individuell tidplan &middot; Nybyggnation</div>
         <h1>Viktoria &amp; Tolga Celebi</h1>
       </div>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Växla mellan ljust och mörkt läge">
+        <span class="icon" id="themeIcon">🌙</span><span id="themeLabel">Mörkt läge</span>
+      </button>
     </div>
     <div class="cover-meta">
       <dl><dt>Avtalsnr</dt><dd class="mono">116440-01</dd></dl>
@@ -339,7 +396,10 @@
 
   <div class="gantt-card">
     <h2>Tidslinje, v.32 2026 &ndash; v.7 2027</h2>
-    <div class="gantt-sub">Rullningsbar &middot; aktivitetsnamnet ligger kvar till vänster</div>
+    <div class="gantt-sub">
+      <span>Rullningsbar &middot; aktivitetsnamnet ligger kvar till vänster &middot; klicka på en rad för att markera den</span>
+      <button class="jump-today" id="jumpToday" type="button">&#8594; Hoppa till idag</button>
+    </div>
     <div class="gantt">
       <div class="ganttInner" id="ganttInner"></div>
     </div>
@@ -469,6 +529,8 @@ root.appendChild(row2);
 // data rows
 TASKS.forEach((task,i)=>{
   const row = el("div","row");
+  row.style.setProperty("--hue", hueFor(i).toFixed(1));
+  row.addEventListener("click", ()=> row.classList.toggle("pinned"));
   const s = idx(task.s), e = idx(task.e);
   const nameCell = el("div","name");
   const dot = el("span","dot");
@@ -528,6 +590,12 @@ if(todayOffset!=null){
   root.appendChild(t);
 }
 
+document.getElementById("jumpToday").addEventListener("click", ()=>{
+  const ganttEl = document.querySelector(".gantt");
+  if(todayOffset==null){ return; }
+  ganttEl.scrollTo({ left: Math.max(0, todayOffset - ganttEl.clientWidth/3), behavior:"smooth" });
+});
+
 root.style.height = (HEAD1H+HEAD2H+TASKS.length*ROWH)+"px";
 
 // apply dark-mode-aware bar colors
@@ -550,6 +618,32 @@ function applyColorMode(){
 }
 applyColorMode();
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyColorMode);
+
+// manual theme toggle (persisted per browser)
+const themeBtn = document.getElementById("themeToggle");
+const themeIcon = document.getElementById("themeIcon");
+const themeLabel = document.getElementById("themeLabel");
+function currentIsDark(){
+  return document.documentElement.getAttribute("data-theme")==="dark" ||
+    (!document.documentElement.hasAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+}
+function updateThemeButton(){
+  const isDark = currentIsDark();
+  themeIcon.textContent = isDark ? "☀️" : "🌙";
+  themeLabel.textContent = isDark ? "Ljust läge" : "Mörkt läge";
+}
+try{
+  const saved = localStorage.getItem("hus-theme");
+  if(saved==="dark" || saved==="light") document.documentElement.setAttribute("data-theme", saved);
+}catch(e){}
+updateThemeButton();
+themeBtn.addEventListener("click", ()=>{
+  const next = currentIsDark() ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try{ localStorage.setItem("hus-theme", next); }catch(e){}
+  applyColorMode();
+  updateThemeButton();
+});
 
 // contacts
 const grid = document.getElementById("contactGrid");
