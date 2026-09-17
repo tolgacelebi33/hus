@@ -333,6 +333,69 @@
   }
 
   /* ---------- Contacts ---------- */
+  /* ---------- Blueprints ---------- */
+  .blueprints h2{ font-size:18px; margin-bottom:2px; }
+  .blueprints-sub{ color:var(--ink-soft); font-size:13px; margin-bottom:16px; }
+  .blueprint-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    gap:14px;
+  }
+  .blueprint-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+    cursor:zoom-in;
+  }
+  .blueprint-img{
+    background:#EFEEE9;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    aspect-ratio:1414/1000;
+    overflow:hidden;
+  }
+  .blueprint-img img{ width:100%; height:100%; object-fit:contain; display:block; }
+  .blueprint-caption{
+    padding:11px 14px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:10px;
+    border-top:1px solid var(--line);
+  }
+  .blueprint-caption .t{ font-weight:600; font-size:13.5px; color:var(--ink); }
+  .blueprint-caption .s{ font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--ink-faint); white-space:nowrap; }
+  .blueprint-note{ margin-top:12px; font-size:11.5px; color:var(--ink-faint); }
+
+  .lightbox{
+    position:fixed; inset:0; z-index:50;
+    background:rgba(10,12,10,0.86);
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+    cursor:zoom-out;
+  }
+  .lightbox[hidden]{ display:none; }
+  .lightbox img{
+    max-width:100%; max-height:100%;
+    background:#EFEEE9;
+    border-radius:6px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  }
+  .lightbox .lb-close{
+    position:absolute; top:18px; right:22px;
+    width:36px; height:36px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,0.3);
+    background:rgba(255,255,255,0.08);
+    color:#fff;
+    font-size:18px;
+    line-height:1;
+    cursor:pointer;
+  }
+
   .contacts h2{ font-size:18px; margin-bottom:2px; }
   .contacts-sub{ color:var(--ink-soft); font-size:13px; margin-bottom:16px;}
   .contact-grid{
@@ -421,6 +484,13 @@
     </div>
   </div>
 
+  <div class="blueprints">
+    <h2>Ritningar</h2>
+    <div class="blueprints-sub">Byggnadsritningar för avtal 116440-01 &middot; klicka för att förstora</div>
+    <div class="blueprint-grid" id="blueprintGrid"></div>
+    <div class="blueprint-note">Ritningar från Myresjöhus, endast för eget bruk.</div>
+  </div>
+
   <div class="contacts">
     <h2>Entreprenörer &amp; kontakter</h2>
     <div class="contacts-sub">Ring vid frågor om respektive del av bygget.</div>
@@ -428,6 +498,11 @@
   </div>
 
   <footer>Baserad på tidplan för avtal 116440-01, upprättad 2026-04-13.</footer>
+</div>
+
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lb-close" id="lbClose" type="button" aria-label="Stäng">&times;</button>
+  <img id="lbImg" src="" alt="">
 </div>
 
 <script>
@@ -678,6 +753,43 @@ CONTRACTORS.forEach((p,i)=>{
   grid.appendChild(contactCard(p.role,p.name,p.tel,false, (204+i*29)%360));
 });
 OVERSIGHT.forEach(p=> grid.appendChild(contactCard(p.role,p.name,p.tel,true)));
+
+// blueprints
+const BLUEPRINTS = [
+  {src:"ritningar/plan.png", title:"Planritning", sub:"Entrévåning · BOA 153,8 m² · A-40-1-01"},
+  {src:"ritningar/fasad-norr-oster.png", title:"Fasad mot norr & öster", sub:"A-40-3-01"},
+  {src:"ritningar/fasad-soder-vaster.png", title:"Fasad mot söder & väster", sub:"A-40-3-02"},
+  {src:"ritningar/sektion.png", title:"Sektion", sub:"Nockhöjd 6,0 m · A-40-2-01"},
+];
+const bpGrid = document.getElementById("blueprintGrid");
+const lightbox = document.getElementById("lightbox");
+const lbImg = document.getElementById("lbImg");
+function openLightbox(src, alt){
+  lbImg.src = src;
+  lbImg.alt = alt;
+  lightbox.hidden = false;
+}
+function closeLightbox(){
+  lightbox.hidden = true;
+  lbImg.src = "";
+}
+BLUEPRINTS.forEach(bp=>{
+  const card = el("div","blueprint-card");
+  const imgWrap = el("div","blueprint-img");
+  const img = document.createElement("img");
+  img.src = bp.src; img.alt = bp.title; img.loading = "lazy";
+  imgWrap.appendChild(img);
+  card.appendChild(imgWrap);
+  const cap = el("div","blueprint-caption");
+  cap.appendChild(el("span","t",bp.title));
+  cap.appendChild(el("span","s",bp.sub));
+  card.appendChild(cap);
+  card.addEventListener("click", ()=> openLightbox(bp.src, bp.title));
+  bpGrid.appendChild(card);
+});
+document.getElementById("lbClose").addEventListener("click", closeLightbox);
+lightbox.addEventListener("click", (e)=>{ if(e.target===lightbox) closeLightbox(); });
+document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeLightbox(); });
 </script>
 </body>
 </html>
