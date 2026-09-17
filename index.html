@@ -33,15 +33,15 @@
       --surface:#1B1F22;
       --surface-2:#21262A;
       --ink:#E9ECE8;
-      --ink-soft:#AAB4AC;
-      --ink-faint:#6E7973;
-      --line:#2B3129;
-      --line-strong:#3A423A;
-      --accent:#E2694F;
+      --ink-soft:#C3CCC5;
+      --ink-faint:#8FA097;
+      --line:#333B33;
+      --line-strong:#48524A;
+      --accent:#FF8266;
       --accent-ink:#241008;
-      --holiday:#C79A3B;
-      --holiday-ink:#F3E3BE;
-      --holiday-tint:rgba(199,154,59,0.22);
+      --holiday:#E0B04C;
+      --holiday-ink:#FBF0D6;
+      --holiday-tint:rgba(224,176,76,0.24);
       --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 10px 26px -14px rgba(0,0,0,0.55);
     }
   }
@@ -50,15 +50,15 @@
     --surface:#1B1F22;
     --surface-2:#21262A;
     --ink:#E9ECE8;
-    --ink-soft:#AAB4AC;
-    --ink-faint:#6E7973;
-    --line:#2B3129;
-    --line-strong:#3A423A;
-    --accent:#E2694F;
+    --ink-soft:#C3CCC5;
+    --ink-faint:#8FA097;
+    --line:#333B33;
+    --line-strong:#48524A;
+    --accent:#FF8266;
     --accent-ink:#241008;
-    --holiday:#C79A3B;
-    --holiday-ink:#F3E3BE;
-    --holiday-tint:rgba(199,154,59,0.22);
+    --holiday:#E0B04C;
+    --holiday-ink:#FBF0D6;
+    --holiday-tint:rgba(224,176,76,0.24);
     --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 10px 26px -14px rgba(0,0,0,0.55);
   }
 
@@ -355,7 +355,11 @@
     color:var(--ink-faint); font-weight:600;
     display:flex; align-items:center; gap:7px;
   }
-  .contact .role .dot{ width:8px; height:8px; }
+  .contact .role .dot{ width:8px; height:8px; background:hsl(var(--hue) 55% 42%); }
+  :root[data-theme="dark"] .contact .role .dot{ background:hsl(var(--hue) 60% 66%); }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .contact .role .dot{ background:hsl(var(--hue) 60% 66%); }
+  }
   .contact .who{ font-size:14.5px; font-weight:600; }
   .contact .who.empty{ color:var(--ink-faint); font-weight:400; font-style:italic; }
   .contact .tel{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-soft); text-decoration:none; }
@@ -659,10 +663,11 @@ themeBtn.addEventListener("click", ()=>{
 
 // contacts
 const grid = document.getElementById("contactGrid");
-function contactCard(role,name,tel,oversight,hue){
+function contactCard(role,name,tel,oversight,hueDeg){
   const c = el("div","contact"+(oversight?" oversight":""));
+  if(hueDeg!=null) c.style.setProperty("--hue", hueDeg);
   const r = el("div","role");
-  if(hue!=null){ const d=el("span","dot"); d.style.background=hue; r.appendChild(d); }
+  if(hueDeg!=null){ const d=el("span","dot"); r.appendChild(d); }
   r.appendChild(document.createTextNode(role));
   c.appendChild(r);
   c.appendChild(el("div","who"+(name?"":" empty"), name || "Ej tillsatt"));
@@ -670,7 +675,7 @@ function contactCard(role,name,tel,oversight,hue){
   return c;
 }
 CONTRACTORS.forEach((p,i)=>{
-  grid.appendChild(contactCard(p.role,p.name,p.tel,false, `hsl(${(204+i*29)%360} 55% 45%)`));
+  grid.appendChild(contactCard(p.role,p.name,p.tel,false, (204+i*29)%360));
 });
 OVERSIGHT.forEach(p=> grid.appendChild(contactCard(p.role,p.name,p.tel,true)));
 </script>
