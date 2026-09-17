@@ -221,27 +221,39 @@
   .row:nth-child(even) .name{ background:var(--surface-2); }
   .row:nth-child(even) .track{ background:var(--surface-2); }
   .row:not(.head1):not(.head2){ cursor:pointer; }
-  .row:not(.head1):not(.head2):hover .name,
-  .row:not(.head1):not(.head2):hover .track,
   .row.pinned .name,
   .row.pinned .track{
     background:hsl(var(--hue) 80% 92%);
   }
-  :root[data-theme="dark"] .row:not(.head1):not(.head2):hover .name,
-  :root[data-theme="dark"] .row:not(.head1):not(.head2):hover .track,
   :root[data-theme="dark"] .row.pinned .name,
   :root[data-theme="dark"] .row.pinned .track{
     background:hsl(var(--hue) 40% 22%);
   }
   @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]) .row:not(.head1):not(.head2):hover .name,
-    :root:not([data-theme="light"]) .row:not(.head1):not(.head2):hover .track,
     :root:not([data-theme="light"]) .row.pinned .name,
     :root:not([data-theme="light"]) .row.pinned .track{
       background:hsl(var(--hue) 40% 22%);
     }
   }
   .row.pinned .name{ box-shadow:inset 3px 0 0 hsl(var(--hue) 60% 45%); }
+  /* Hover highlight only on devices with a real pointer (mouse/trackpad) —
+     touch screens have no way to un-hover, which made taps look "stuck". */
+  @media (hover:hover) and (pointer:fine){
+    .row:not(.head1):not(.head2):hover .name,
+    .row:not(.head1):not(.head2):hover .track{
+      background:hsl(var(--hue) 80% 92%);
+    }
+    :root[data-theme="dark"] .row:not(.head1):not(.head2):hover .name,
+    :root[data-theme="dark"] .row:not(.head1):not(.head2):hover .track{
+      background:hsl(var(--hue) 40% 22%);
+    }
+    @media (prefers-color-scheme: dark){
+      :root:not([data-theme="light"]) .row:not(.head1):not(.head2):hover .name,
+      :root:not([data-theme="light"]) .row:not(.head1):not(.head2):hover .track{
+        background:hsl(var(--hue) 40% 22%);
+      }
+    }
+  }
   .dot{ width:9px; height:9px; border-radius:50%; flex:none; box-shadow:0 0 0 2px var(--surface) inset;}
   .aname{ color:var(--ink); font-weight:500; }
   .aname small{ display:block; color:var(--ink-faint); font-weight:400; font-size:11px; margin-top:1px; }
