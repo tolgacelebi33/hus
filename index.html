@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Celebis Tidplan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --paper:#EEF1EE;
+    --surface:#FFFFFF;
+    --surface-2:#F5F7F4;
+    --ink:#1A211D;
+    --ink-soft:#57635B;
+    --ink-faint:#8B968E;
+    --line:#D8DED9;
+    --line-strong:#B9C2BB;
+    --accent:#9C3B2E;
+    --accent-ink:#FFF6F2;
+    --holiday:#E8B84B;
+    --holiday-ink:#4A3510;
+    --holiday-tint:rgba(232,184,75,0.30);
+    --shadow: 0 1px 2px rgba(20,24,20,0.06), 0 8px 20px -12px rgba(20,24,20,0.18);
+    --namew: 300px;
+    --colw: 46px;
+    --rowh: 42px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#14171A;
+      --surface:#1B1F22;
+      --surface-2:#21262A;
+      --ink:#E9ECE8;
+      --ink-soft:#AAB4AC;
+      --ink-faint:#6E7973;
+      --line:#2B3129;
+      --line-strong:#3A423A;
+      --accent:#E2694F;
+      --accent-ink:#241008;
+      --holiday:#C79A3B;
+      --holiday-ink:#F3E3BE;
+      --holiday-tint:rgba(199,154,59,0.22);
+      --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 10px 26px -14px rgba(0,0,0,0.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#14171A;
+    --surface:#1B1F22;
+    --surface-2:#21262A;
+    --ink:#E9ECE8;
+    --ink-soft:#AAB4AC;
+    --ink-faint:#6E7973;
+    --line:#2B3129;
+    --line-strong:#3A423A;
+    --accent:#E2694F;
+    --accent-ink:#241008;
+    --holiday:#C79A3B;
+    --holiday-ink:#F3E3BE;
+    --holiday-tint:rgba(199,154,59,0.22);
+    --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 10px 26px -14px rgba(0,0,0,0.55);
+  }
+
+  *{box-sizing:border-box;}
+  html{ background:var(--paper); }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  img{ max-width:100%; }
+  .page{
+    max-width:1180px;
+    margin:0 auto;
+    padding:28px 20px 64px;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+  }
+  h1,h2,h3{
+    font-family:"IBM Plex Serif", Georgia, serif;
+    font-weight:600;
+    margin:0;
+    text-wrap:balance;
+  }
+  a{ color:inherit; }
+  .mono{ font-family:"IBM Plex Mono", ui-monospace, SFMono-Regular, monospace; font-variant-numeric:tabular-nums; }
+
+  /* ---------- Header ---------- */
+  .cover{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .cover-top{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    padding:22px 26px 18px;
+    border-bottom:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .cover-eyebrow{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--accent);
+    font-weight:600;
+  }
+  .cover-top h1{ font-size:26px; margin-top:4px; }
+  .cover-meta{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+    gap:0;
+  }
+  .cover-meta dl{ margin:0; padding:14px 26px; border-right:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .cover-meta dl:last-child{ border-right:none; }
+  .cover-meta dt{ font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:4px;}
+  .cover-meta dd{ margin:0; font-size:14.5px; font-weight:500; }
+  .cover-meta dd.mono{ font-size:14px; }
+
+  /* ---------- Legend ---------- */
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px 20px;
+    align-items:center;
+    padding:12px 16px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .legend b{ color:var(--ink); font-weight:600; }
+  .legend .item{ display:flex; align-items:center; gap:7px; white-space:nowrap; }
+  .legend .swatch{ width:16px; height:10px; border-radius:3px; flex:none; }
+  .legend .diamond{ width:9px; height:9px; transform:rotate(45deg); background:var(--ink-soft); flex:none; }
+  .legend .band{ width:16px; height:14px; background:var(--holiday-tint); border:1px solid var(--holiday); border-radius:2px; flex:none;}
+  .legend .todayline{ width:16px; height:0; border-top:2px dashed var(--accent); flex:none; }
+
+  /* ---------- Gantt ---------- */
+  .gantt-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .gantt-card h2{ font-size:18px; padding:18px 22px 0; }
+  .gantt-sub{ padding:2px 22px 14px; color:var(--ink-soft); font-size:13px; }
+  .gantt{
+    overflow-x:auto;
+    overflow-y:hidden;
+    border-top:1px solid var(--line);
+  }
+  .ganttInner{
+    position:relative;
+    min-width:max-content;
+  }
+  .row{
+    display:grid;
+    grid-template-columns: var(--namew) calc(29 * var(--colw));
+  }
+  .row.head1 .name, .row.head2 .name{
+    position:sticky; left:0; z-index:4;
+    background:var(--surface);
+  }
+  .name{
+    position:sticky; left:0; z-index:3;
+    background:var(--surface);
+    padding:0 14px 0 16px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    border-right:1px solid var(--line-strong);
+    border-bottom:1px solid var(--line);
+    min-height:var(--rowh);
+    font-size:13px;
+    line-height:1.25;
+  }
+  .row:nth-child(even) .name{ background:var(--surface-2); }
+  .row:nth-child(even) .track{ background:var(--surface-2); }
+  .dot{ width:9px; height:9px; border-radius:50%; flex:none; box-shadow:0 0 0 2px var(--surface) inset;}
+  .aname{ color:var(--ink); font-weight:500; }
+  .aname small{ display:block; color:var(--ink-faint); font-weight:400; font-size:11px; margin-top:1px; }
+  .track{
+    position:relative;
+    border-bottom:1px solid var(--line);
+    background-image: repeating-linear-gradient(to right, var(--line-strong) 0 1px, transparent 1px var(--colw));
+    min-height:var(--rowh);
+  }
+  .row.head1 .track, .row.head2 .track{ background-image:none; }
+
+  .month{
+    position:absolute; top:0; bottom:0;
+    display:flex; align-items:center; padding-left:8px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-faint);
+    border-right:1px solid var(--line);
+  }
+  .wk{
+    position:absolute; top:0; bottom:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-family:"IBM Plex Mono", monospace;
+  }
+  .wk .n{ font-size:12.5px; font-weight:600; color:var(--ink); }
+  .wk .d{ font-size:9px; color:var(--ink-faint); margin-top:1px; }
+
+  .bar{
+    position:absolute;
+    top:50%; transform:translateY(-50%);
+    height:20px;
+    border-radius:5px;
+    box-shadow:0 1px 1px rgba(0,0,0,0.12);
+  }
+  .bar.delivery{
+    height:16px;
+    border-radius:4px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:9px;
+  }
+  .diamond{
+    position:absolute; top:50%; left:0;
+    width:15px; height:15px;
+    transform:translate(-50%,-50%) rotate(45deg);
+    border-radius:3px;
+    box-shadow:0 1px 1px rgba(0,0,0,0.15);
+  }
+  .caption{
+    position:absolute; top:50%; transform:translateY(-50%);
+    font-size:11px; color:var(--ink-soft);
+    white-space:nowrap;
+    font-style:italic;
+  }
+  .caption b{ color:var(--ink); font-style:normal; font-family:"IBM Plex Mono",monospace; font-weight:500;}
+
+  .holidayBand{
+    position:absolute; top:0; bottom:0;
+    background:var(--holiday-tint);
+    border-left:1px solid var(--holiday);
+    border-right:1px solid var(--holiday);
+    z-index:1;
+  }
+  .holidayBand .lbl{
+    position:absolute; top:6px; left:50%; transform:translateX(-50%);
+    font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:.06em;
+    color:var(--holiday-ink); text-transform:uppercase; white-space:nowrap;
+  }
+  .today{
+    position:absolute; top:0; bottom:0;
+    border-left:2px dashed var(--accent);
+    z-index:2;
+  }
+  .today .lbl{
+    position:absolute; top:-1px; left:4px;
+    font-family:"IBM Plex Mono",monospace; font-size:9.5px; font-weight:600;
+    color:var(--accent); white-space:nowrap;
+  }
+
+  /* ---------- Contacts ---------- */
+  .contacts h2{ font-size:18px; margin-bottom:2px; }
+  .contacts-sub{ color:var(--ink-soft); font-size:13px; margin-bottom:16px;}
+  .contact-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:10px;
+  }
+  .contact{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:13px 15px;
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    box-shadow:var(--shadow);
+  }
+  .contact .role{
+    font-size:10.5px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--ink-faint); font-weight:600;
+    display:flex; align-items:center; gap:7px;
+  }
+  .contact .role .dot{ width:8px; height:8px; }
+  .contact .who{ font-size:14.5px; font-weight:600; }
+  .contact .who.empty{ color:var(--ink-faint); font-weight:400; font-style:italic; }
+  .contact .tel{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-soft); text-decoration:none; }
+  .contact .tel:hover{ color:var(--accent); }
+  .contact.oversight{ border-color:var(--accent); }
+  .contact.oversight .role{ color:var(--accent); }
+
+  footer{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--ink-faint);
+    padding-top:6px;
+  }
+
+  @media (max-width:640px){
+    .cover-top h1{ font-size:21px; }
+    :root{ --namew:220px; }
+    .gantt-card h2{ font-size:16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="cover">
+    <div class="cover-top">
+      <div>
+        <div class="cover-eyebrow">Individuell tidplan &middot; Nybyggnation</div>
+        <h1>Viktoria &amp; Tolga Celebi</h1>
+      </div>
+    </div>
+    <div class="cover-meta">
+      <dl><dt>Avtalsnr</dt><dd class="mono">116440-01</dd></dl>
+      <dl><dt>Upprättad</dt><dd class="mono">2026-04-13</dd></dl>
+      <dl><dt>Projektledare</dt><dd>Lukas Fridh</dd></dl>
+      <dl><dt>Kontrollansvarig</dt><dd>Jonas Sjösten</dd></dl>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="item"><span class="swatch" style="background:var(--ink-soft)"></span> <b>Färg per rad</b> &ndash; följ aktiviteten i tabellen</span>
+    <span class="item"><span class="diamond"></span> Leverans / besiktning</span>
+    <span class="item"><span class="band"></span> Julledighet v.52&ndash;53</span>
+    <span class="item"><span class="todayline"></span> Idag</span>
+  </div>
+
+  <div class="gantt-card">
+    <h2>Tidslinje, v.32 2026 &ndash; v.7 2027</h2>
+    <div class="gantt-sub">Rullningsbar &middot; aktivitetsnamnet ligger kvar till vänster</div>
+    <div class="gantt">
+      <div class="ganttInner" id="ganttInner"></div>
+    </div>
+  </div>
+
+  <div class="contacts">
+    <h2>Entreprenörer &amp; kontakter</h2>
+    <div class="contacts-sub">Ring vid frågor om respektive del av bygget.</div>
+    <div class="contact-grid" id="contactGrid"></div>
+  </div>
+
+  <footer>Baserad på tidplan för avtal 116440-01, upprättad 2026-04-13.</footer>
+</div>
+
+<script>
+const WEEKS = [32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,1,2,3,4,5,6,7];
+const YEARS = WEEKS.map(w => (w>=32? 2026:2027));
+
+function mondayOfISOWeek(year, week){
+  const simple = new Date(Date.UTC(year,0,1+(week-1)*7));
+  const dow = simple.getUTCDay() || 7;
+  simple.setUTCDate(simple.getUTCDate() - dow + 1);
+  return simple;
+}
+const MONDAYS = WEEKS.map((w,i)=>mondayOfISOWeek(YEARS[i], w));
+const MONTHS_SV = ["jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"];
+function fmtDate(d){ return d.getUTCDate()+" "+MONTHS_SV[d.getUTCMonth()]; }
+
+function idx(weekLabel, fromEnd){
+  // weeks 1-7 only occur once, at the tail; weeks 32-53 occur once, at the head
+  if (weekLabel>=32) return WEEKS.indexOf(weekLabel);
+  return WEEKS.lastIndexOf(weekLabel);
+}
+
+const TASKS = [
+  {n:"Grundarbeten", s:32, e:34, t:"work"},
+  {n:"Husleverans stomme", s:35, e:35, t:"milestone", date:"24 aug 2026"},
+  {n:"Avropa lösull", s:35, e:35, t:"work"},
+  {n:"Taktegel, ventilation, innerväggar enklade, gles och difspärr", s:35, e:39, t:"work"},
+  {n:"Byggmöte med bygg, el och kund", s:39, e:39, t:"work"},
+  {n:"Bygg färdigställa utv.", s:37, e:38, t:"work"},
+  {n:"VVS o EL installation, 1:a besök", s:39, e:41, t:"work"},
+  {n:"Provtryckning hus innan lösull sprutas", s:42, e:42, t:"work"},
+  {n:"Lösull sprutas", s:42, e:42, t:"work"},
+  {n:"Färdigställande innerväggar, innertak", s:42, e:44, t:"work"},
+  {n:"Kakel", s:46, e:48, t:"work"},
+  {n:"Målare", s:45, e:47, t:"work"},
+  {n:"2:a leverans: trappa, parkett, dörrar, lister", s:48, e:48, t:"delivery"},
+  {n:"Leverans radiatorer, vvs-paket, Vedum", s:49, e:49, t:"delivery"},
+  {n:"Kök", s:49, e:49, t:"delivery"},
+  {n:"Leverans hushållsmaskiner", s:50, e:50, t:"delivery"},
+  {n:"Komplettering bygg, el och vvs", s:48, e:3, t:"work"},
+  {n:"Ventilationsinjustering, OVK", s:3, e:3, t:"work"},
+  {n:"Slutrengöring / kontrollbesiktning", s:3, e:3, t:"milestone", note:"Målare och byggare ska närvara"},
+  {n:"Åtgärda ev. besiktningsanmärkningar", s:4, e:5, t:"work"},
+  {n:"Avsyning inför slutbesiktning", s:5, e:5, t:"work"},
+  {n:"Slutbesiktning", s:6, e:6, t:"milestone", note:"Målare och byggare ska närvara", prelim:true},
+];
+
+const CONTRACTORS = [
+  {role:"Grund", name:"Ulf Kinder", tel:"0708-765636"},
+  {role:"Mark", name:"Tomas Pettersson", tel:"0703-062183"},
+  {role:"Plåtslagare", name:null, tel:null},
+  {role:"Bygg", name:"Nicklas Magnusson", tel:"0722-433170"},
+  {role:"Vvs", name:"Mattias Lahode", tel:"0705-744036"},
+  {role:"El", name:"Pierre Larsson", tel:"0708-746318"},
+  {role:"Målning", name:"Robin Olsson", tel:"0736-918109"},
+  {role:"Kakel", name:"Peter Båth", tel:"0705-987599"},
+  {role:"Murare", name:null, tel:null},
+];
+const OVERSIGHT = [
+  {role:"Kontrollansvarig", name:"Jonas Sjösten", tel:"0768-943634"},
+  {role:"Projektledare", name:"Lukas Fridh", tel:"070-6018395"},
+];
+
+const COLW = 46, NAMEW = 300, ROWH = 42, HEAD1H = 26, HEAD2H = 40;
+const N = WEEKS.length;
+const trackW = N*COLW;
+
+function hueFor(i){ return (204 + i*(360/TASKS.length)) % 360; }
+function barColor(i){ return `hsl(${hueFor(i).toFixed(1)} 58% 42%)`; }
+function darkBarColor(i){ return `hsl(${hueFor(i).toFixed(1)} 55% 63%)`; }
+
+// month groups
+const monthGroups = [];
+let curKey=null, curStart=0;
+MONDAYS.forEach((d,i)=>{
+  const key = d.getUTCFullYear()+"-"+d.getUTCMonth();
+  if(key!==curKey){
+    if(curKey!==null) monthGroups.push({start:curStart, end:i-1, label:MONTHS_SV[MONDAYS[curStart].getUTCMonth()]+" ’"+String(MONDAYS[curStart].getUTCFullYear()).slice(2)});
+    curKey=key; curStart=i;
+  }
+});
+monthGroups.push({start:curStart, end:N-1, label:MONTHS_SV[MONDAYS[curStart].getUTCMonth()]+" ’"+String(MONDAYS[curStart].getUTCFullYear()).slice(2)});
+
+const root = document.getElementById("ganttInner");
+root.style.setProperty("--rowh", ROWH+"px");
+
+function el(tag, cls, html){ const e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; }
+
+// header row 1: month groups
+const row1 = el("div","row head1");
+row1.appendChild(el("div","name",""));
+const track1 = el("div","track"); track1.style.height=HEAD1H+"px";
+monthGroups.forEach(g=>{
+  const m = el("div","month", g.label);
+  m.style.left = (g.start*COLW)+"px";
+  m.style.width = ((g.end-g.start+1)*COLW)+"px";
+  track1.appendChild(m);
+});
+row1.appendChild(track1);
+row1.querySelector(".track").style.minHeight = HEAD1H+"px";
+root.appendChild(row1);
+
+// header row 2: week numbers + dates
+const row2 = el("div","row head2");
+row2.appendChild(el("div","name","<span style=\"font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);font-weight:600;\">Aktivitet</span>"));
+const track2 = el("div","track"); track2.style.minHeight=HEAD2H+"px";
+WEEKS.forEach((w,i)=>{
+  const c = el("div","wk", `<span class="n">v.${w}</span><span class="d">${fmtDate(MONDAYS[i])}</span>`);
+  c.style.left=(i*COLW)+"px"; c.style.width=COLW+"px";
+  track2.appendChild(c);
+});
+row2.appendChild(track2);
+root.appendChild(row2);
+
+// data rows
+TASKS.forEach((task,i)=>{
+  const row = el("div","row");
+  const s = idx(task.s), e = idx(task.e);
+  const nameCell = el("div","name");
+  const dot = el("span","dot");
+  dot.style.background = barColor(i);
+  nameCell.appendChild(dot);
+  const nameText = el("span","aname", task.n + (task.date? `<small>${task.date}</small>`:"") + (task.note? `<small>${task.note}</small>`:""));
+  nameCell.appendChild(nameText);
+  row.appendChild(nameCell);
+
+  const track = el("div","track");
+  if(task.t==="milestone"){
+    const d = el("div","diamond");
+    d.style.left = (s*COLW + COLW/2)+"px";
+    d.style.background = barColor(i);
+    track.appendChild(d);
+    const cap = el("div","caption", task.prelim? "vecka/datum fastställs senare" : "");
+    cap.style.left = (s*COLW + COLW + 6)+"px";
+    if(task.prelim) track.appendChild(cap);
+  } else if(task.t==="delivery"){
+    const b = el("div","bar delivery","\u{1F4E6}");
+    b.style.left=(s*COLW+4)+"px"; b.style.width=((e-s+1)*COLW-8)+"px";
+    b.style.background = barColor(i);
+    track.appendChild(b);
+  } else {
+    const b = el("div","bar");
+    b.style.left=(s*COLW+3)+"px"; b.style.width=((e-s+1)*COLW-6)+"px";
+    b.style.background = barColor(i);
+    track.appendChild(b);
+  }
+  row.appendChild(track);
+  root.appendChild(row);
+});
+
+// holiday band (weeks 52-53), spans full height
+const i52 = WEEKS.indexOf(52);
+const band = el("div","holidayBand");
+band.style.left = (NAMEW + i52*COLW)+"px";
+band.style.width = (2*COLW)+"px";
+band.appendChild(el("div","lbl","Jul"));
+root.appendChild(band);
+
+// today marker
+const TODAY = new Date();
+let todayOffset = null;
+for(let i=0;i<N;i++){
+  const start = MONDAYS[i];
+  const end = new Date(start); end.setUTCDate(end.getUTCDate()+7);
+  if(TODAY>=start && TODAY<end){
+    todayOffset = i*COLW + ((TODAY-start)/(7*86400000))*COLW;
+    break;
+  }
+}
+if(todayOffset!=null){
+  const t = el("div","today");
+  t.style.left = (NAMEW+todayOffset)+"px";
+  t.appendChild(el("div","lbl","Idag"));
+  root.appendChild(t);
+}
+
+root.style.height = (HEAD1H+HEAD2H+TASKS.length*ROWH)+"px";
+
+// apply dark-mode-aware bar colors
+function applyColorMode(){
+  const isDark = document.documentElement.getAttribute("data-theme")==="dark" ||
+    (!document.documentElement.hasAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const dots = document.querySelectorAll(".name .dot");
+  TASKS.forEach((task,i)=>{
+    const c = isDark? darkBarColor(i) : barColor(i);
+    if(dots[i]) dots[i].style.background = c;
+  });
+  const rows = root.querySelectorAll(".row:not(.head1):not(.head2)");
+  rows.forEach((row,i)=>{
+    const c = isDark? darkBarColor(i) : barColor(i);
+    const bar = row.querySelector(".bar");
+    if(bar) bar.style.background = c;
+    const dia = row.querySelector(".diamond");
+    if(dia) dia.style.background = c;
+  });
+}
+applyColorMode();
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyColorMode);
+
+// contacts
+const grid = document.getElementById("contactGrid");
+function contactCard(role,name,tel,oversight,hue){
+  const c = el("div","contact"+(oversight?" oversight":""));
+  const r = el("div","role");
+  if(hue!=null){ const d=el("span","dot"); d.style.background=hue; r.appendChild(d); }
+  r.appendChild(document.createTextNode(role));
+  c.appendChild(r);
+  c.appendChild(el("div","who"+(name?"":" empty"), name || "Ej tillsatt"));
+  if(tel) c.appendChild(el("a","tel",tel)).setAttribute("href","tel:"+tel.replace(/-/g,""));
+  return c;
+}
+CONTRACTORS.forEach((p,i)=>{
+  grid.appendChild(contactCard(p.role,p.name,p.tel,false, `hsl(${(204+i*29)%360} 55% 45%)`));
+});
+OVERSIGHT.forEach(p=> grid.appendChild(contactCard(p.role,p.name,p.tel,true)));
+</script>
+</body>
+</html>
