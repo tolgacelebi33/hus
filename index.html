@@ -141,6 +141,66 @@
   .cover-meta dd{ margin:0; font-size:14.5px; font-weight:500; }
   .cover-meta dd.mono{ font-size:14px; }
 
+  /* ---------- Status (countdown / progress / weather) ---------- */
+  .status-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:14px;
+  }
+  .stat-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 18px;
+    box-shadow:var(--shadow);
+  }
+  .stat-card .lbl{
+    font-size:10.5px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--ink-faint); font-weight:600; margin-bottom:6px;
+  }
+  .stat-card .val{
+    font-family:"IBM Plex Serif", Georgia, serif;
+    font-size:32px; font-weight:600; line-height:1;
+    color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  .stat-card .val small{ font-family:"IBM Plex Sans",sans-serif; font-size:15px; font-weight:500; color:var(--ink-soft); margin-left:6px; }
+  .stat-card .sub{ margin-top:6px; font-size:12.5px; color:var(--ink-soft); }
+  .stat-card .bar{
+    margin-top:12px; height:6px; border-radius:3px;
+    background:var(--surface-2); overflow:hidden;
+  }
+  .stat-card .bar > i{ display:block; height:100%; background:var(--accent); border-radius:3px; }
+
+  .weather-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 18px;
+    box-shadow:var(--shadow);
+  }
+  .weather-card .lbl{
+    font-size:10.5px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--ink-faint); font-weight:600; margin-bottom:2px;
+  }
+  .weather-card .sub{ font-size:12.5px; color:var(--ink-soft); margin-bottom:12px; }
+  .weather-days{
+    display:flex; gap:8px; overflow-x:auto;
+  }
+  .weather-day{
+    flex:1 1 0; min-width:74px;
+    text-align:center;
+    padding:10px 6px;
+    border-radius:9px;
+    background:var(--surface-2);
+  }
+  .weather-day .d{ font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); font-weight:600; }
+  .weather-day .icon{ font-size:22px; margin:5px 0; }
+  .weather-day .hi{ font-family:"IBM Plex Mono",monospace; font-size:13.5px; font-weight:600; color:var(--ink); }
+  .weather-day .lo{ font-family:"IBM Plex Mono",monospace; font-size:11.5px; color:var(--ink-faint); }
+  .weather-day .rain{ font-size:10.5px; color:var(--ink-soft); margin-top:3px; }
+  .weather-note{ margin-top:4px; font-size:11px; color:var(--ink-faint); }
+
   /* ---------- Legend ---------- */
   .legend{
     display:flex;
@@ -466,6 +526,15 @@
     </div>
   </div>
 
+  <div class="status-grid" id="statusGrid"></div>
+
+  <div class="weather-card">
+    <div class="lbl">Väder i Dalstorp</div>
+    <div class="sub">Prognos, relevant för utomhusmoment som grund och tak</div>
+    <div class="weather-days" id="weatherDays"><div class="weather-day"><div class="d">Laddar</div></div></div>
+    <div class="weather-note" id="weatherNote"></div>
+  </div>
+
   <div class="legend">
     <span class="item"><span class="swatch" style="background:var(--ink-soft)"></span> <b>Färg per rad</b> &ndash; följ aktiviteten i tabellen</span>
     <span class="item"><span class="diamond"></span> Leverans / besiktning</span>
@@ -510,10 +579,16 @@ const WEEKS = [32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53
 const YEARS = WEEKS.map(w => (w>=32? 2026:2027));
 
 function mondayOfISOWeek(year, week){
-  const simple = new Date(Date.UTC(year,0,1+(week-1)*7));
-  const dow = simple.getUTCDay() || 7;
-  simple.setUTCDate(simple.getUTCDate() - dow + 1);
-  return simple;
+  // Jan 4 always falls in ISO week 1 (ISO-8601) — anchor on it rather than
+  // Jan 1, which can itself belong to the previous year's last week
+  // (e.g. 2027-01-01 is a Friday, part of 2026's week 53).
+  const jan4 = new Date(Date.UTC(year,0,4));
+  const jan4Dow = jan4.getUTCDay() || 7;
+  const week1Monday = new Date(jan4);
+  week1Monday.setUTCDate(jan4.getUTCDate() - jan4Dow + 1);
+  const result = new Date(week1Monday);
+  result.setUTCDate(week1Monday.getUTCDate() + (week-1)*7);
+  return result;
 }
 const MONDAYS = WEEKS.map((w,i)=>mondayOfISOWeek(YEARS[i], w));
 const MONTHS_SV = ["jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"];
@@ -684,6 +759,117 @@ document.getElementById("jumpToday").addEventListener("click", ()=>{
   if(todayOffset==null){ return; }
   ganttEl.scrollTo({ left: Math.max(0, todayOffset - ganttEl.clientWidth/3), behavior:"smooth" });
 });
+
+// ---------- Countdown + progress ----------
+const DAY_MS = 86400000;
+function daysBetween(a,b){ return Math.round((b-a)/DAY_MS); }
+function statCard(label, valueHtml, subText, barPct){
+  const c = el("div","stat-card");
+  c.appendChild(el("div","lbl",label));
+  c.appendChild(el("div","val",valueHtml));
+  if(subText) c.appendChild(el("div","sub",subText));
+  if(barPct!=null){
+    const bar = el("div","bar");
+    const i = document.createElement("i");
+    i.style.width = Math.max(0,Math.min(100,barPct))+"%";
+    bar.appendChild(i);
+    c.appendChild(bar);
+  }
+  return c;
+}
+
+const statusGrid = document.getElementById("statusGrid");
+
+// Countdown to (preliminary) slutbesiktning
+const slutV6 = mondayOfISOWeek(2027,6);
+const daysToSlut = daysBetween(TODAY, slutV6);
+{
+  let valueHtml, sub;
+  if(daysToSlut > 0){
+    valueHtml = daysToSlut + "<small>dagar kvar</small>";
+    sub = "till preliminär slutbesiktning · v.6 2027";
+  } else if(daysToSlut === 0){
+    valueHtml = "Idag";
+    sub = "preliminär slutbesiktning · v.6 2027";
+  } else {
+    valueHtml = Math.abs(daysToSlut) + "<small>dagar sedan</small>";
+    sub = "preliminär slutbesiktning (v.6 2027) passerad";
+  }
+  statusGrid.appendChild(statCard("Nedräkning", valueHtml, sub));
+}
+
+// Progress through the whole timeline (v.32 2026 – v.7 2027)
+{
+  const start = MONDAYS[0];
+  const end = new Date(MONDAYS[N-1]); end.setUTCDate(end.getUTCDate()+7);
+  const totalDays = daysBetween(start,end);
+  const elapsedDays = daysBetween(start,TODAY);
+  let pct, sub, valueHtml;
+  if(elapsedDays<0){
+    pct = 0;
+    valueHtml = "0<small>%</small>";
+    sub = "startar om " + Math.abs(elapsedDays) + " dagar";
+  } else if(elapsedDays>totalDays){
+    pct = 100;
+    valueHtml = "100<small>%</small>";
+    sub = "tidplanen är avslutad";
+  } else {
+    pct = (elapsedDays/totalDays)*100;
+    const weekNum = Math.min(N, Math.floor(elapsedDays/7)+1);
+    valueHtml = Math.round(pct) + "<small>%</small>";
+    sub = "vecka " + weekNum + " av " + N;
+  }
+  statusGrid.appendChild(statCard("Framsteg", valueHtml, sub, pct));
+}
+
+// ---------- Weather (Dalstorp, Tranemo kommun) ----------
+const WEEKDAYS_SV = ["mån","tis","ons","tor","fre","lör","sön"];
+function weatherIcon(code){
+  if(code===0) return "☀️";
+  if(code===1) return "🌤️";
+  if(code===2) return "⛅";
+  if(code===3) return "☁️";
+  if(code===45||code===48) return "🌫️";
+  if([51,53,55,56,57,80,81,82].includes(code)) return "🌦️";
+  if([61,63,65,66,67].includes(code)) return "🌧️";
+  if([71,73,75,77,85,86].includes(code)) return "🌨️";
+  if([95,96,99].includes(code)) return "⛈️";
+  return "🌡️";
+}
+async function loadWeather(){
+  const daysEl = document.getElementById("weatherDays");
+  const noteEl = document.getElementById("weatherNote");
+  try{
+    let lat=57.53, lon=13.35; // fallback: Dalstorp, Tranemo kommun
+    try{
+      const geoRes = await fetch("https://geocoding-api.open-meteo.com/v1/search?name=Dalstorp&country=SE&count=1");
+      const geo = await geoRes.json();
+      if(geo.results && geo.results.length){ lat = geo.results[0].latitude; lon = geo.results[0].longitude; }
+    }catch(e){}
+    const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Europe%2FStockholm&forecast_days=7`);
+    if(!wRes.ok) throw new Error("weather fetch failed");
+    const w = await wRes.json();
+    const d = w.daily;
+    daysEl.innerHTML = "";
+    d.time.forEach((dateStr,i)=>{
+      const date = new Date(dateStr+"T00:00:00Z");
+      const wd = WEEKDAYS_SV[(date.getUTCDay()+6)%7];
+      const tile = el("div","weather-day");
+      tile.appendChild(el("div","d", i===0 ? "Idag" : wd));
+      tile.appendChild(el("div","icon", weatherIcon(d.weathercode[i])));
+      tile.appendChild(el("div","hi", Math.round(d.temperature_2m_max[i])+"°"));
+      tile.appendChild(el("div","lo", Math.round(d.temperature_2m_min[i])+"°"));
+      const precip = d.precipitation_sum[i];
+      tile.appendChild(el("div","rain", precip>=0.1 ? precip.toFixed(1)+" mm" : "—"));
+      daysEl.appendChild(tile);
+    });
+    noteEl.textContent = "Källa: Open-Meteo · uppdateras vid sidladdning";
+  }catch(e){
+    daysEl.innerHTML = "";
+    noteEl.textContent = "Kunde inte hämta väderprognos just nu.";
+  }
+}
+loadWeather();
 
 root.style.height = (HEAD1H+HEAD2H+TASKS.length*ROWH)+"px";
 
