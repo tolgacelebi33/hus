@@ -645,7 +645,8 @@ const OVERSIGHT = [
   {role:"Projektledare", name:"Lukas Fridh", tel:"070-6018395"},
 ];
 
-const COLW = 46, NAMEW = 300, ROWH = 42, HEAD1H = 26, HEAD2H = 40;
+const COLW = 46, ROWH = 42, HEAD1H = 26, HEAD2H = 40;
+let NAMEW = 300; // fallback; measured from the real .name column once it's rendered (it varies by breakpoint — see @media max-width:640px)
 const N = WEEKS.length;
 const trackW = N*COLW;
 
@@ -737,7 +738,6 @@ TASKS.forEach((task,i)=>{
 // holiday band (weeks 52-53), spans full height
 const i52 = WEEKS.indexOf(52);
 const band = el("div","holidayBand");
-band.style.left = (NAMEW + i52*COLW)+"px";
 band.style.width = (2*COLW)+"px";
 band.appendChild(el("div","lbl","Jul"));
 root.appendChild(band);
@@ -753,12 +753,29 @@ for(let i=0;i<N;i++){
     break;
   }
 }
+let todayEl = null;
 if(todayOffset!=null){
-  const t = el("div","today");
-  t.style.left = (NAMEW+todayOffset)+"px";
-  t.appendChild(el("div","lbl","Idag"));
-  root.appendChild(t);
+  todayEl = el("div","today");
+  todayEl.appendChild(el("div","lbl","Idag"));
+  root.appendChild(todayEl);
 }
+
+// The .name column's rendered width changes at the @media max-width:640px
+// breakpoint (e.g. phone portrait vs. landscape), which CSS picks up live
+// on rotation — but these overlays are positioned in plain pixels, so they
+// have to be re-measured and repositioned every time that can happen, not
+// just once at load.
+function repositionOverlays(){
+  const nameEl = root.querySelector(".name");
+  if(!nameEl) return;
+  const w = nameEl.getBoundingClientRect().width;
+  if(w>0) NAMEW = w;
+  band.style.left = (NAMEW + i52*COLW)+"px";
+  if(todayEl) todayEl.style.left = (NAMEW+todayOffset)+"px";
+}
+repositionOverlays();
+window.addEventListener("resize", repositionOverlays);
+if(window.visualViewport) window.visualViewport.addEventListener("resize", repositionOverlays);
 
 document.getElementById("jumpToday").addEventListener("click", ()=>{
   const ganttEl = document.querySelector(".gantt");
